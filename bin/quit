@@ -4,4 +4,4 @@ SHIRCDIR="$(dirname $0)/../io"
 
 echo QUIT > "$SHIRCDIR/cmd.in"
 
-rm -f "$SHIRCDIR/*"
+rm -f "$SHIRCDIR/"*
