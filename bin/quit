@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-echo QUIT > io/cmd.in
+SHIRCDIR="$(dirname $0)/../io"
 
-rm -f io/*
+echo QUIT > "$SHIRCDIR/cmd.in"
+
+rm -f "$SHIRCDIR/*"

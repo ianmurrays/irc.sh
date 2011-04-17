@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 
+SHIRCDIR="$(dirname $0)/../io"
+
 HOST=$1
 PORT=$2
 NICK=$3
 
-mkdir -p io
+mkdir -p "$SHIRCDIR"
 
-rm -f io/cmd.in
-mkfifo io/cmd.in
+rm -f "$SHIRCDIR/cmd.in"
+mkfifo "$SHIRCDIR/cmd.in"
 
-nc $HOST $PORT <> io/cmd.in > io/main.out &
+nc $HOST $PORT <> "$SHIRCDIR/cmd.in" > "$SHIRCDIR/main.out" &
 
-cat >> io/cmd.in <<EOF
+cat >> "$SHIRCDIR/cmd.in" <<EOF
 NICK $NICK
 USER $NICK 8 * : $NICK
 EOF
