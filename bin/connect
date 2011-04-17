@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+HOST=$1
+PORT=$2
+NICK=$3
+
+mkdir -p io
+
+rm -f io/cmd.in
+mkfifo io/cmd.in
+
+nc $HOST $PORT <> io/cmd.in > io/main.out &
+
+cat >> io/cmd.in <<EOF
+NICK $NICK
+USER $NICK 8 * : $NICK
+EOF

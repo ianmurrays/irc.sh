@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+CHAN=$1
+PROPERCHAN="${CHAN//%/#}"
+
+echo "PART $PROPERCHAN" >> io/cmd.in
+
+cat "io/$CHAN.pid" | xargs kill
+rm "io/$CHAN".*

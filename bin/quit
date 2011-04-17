@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo QUIT > io/cmd.in
+
+rm -f io/*

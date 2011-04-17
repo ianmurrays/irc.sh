@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+CHAN="$1"
+PROPERCHAN="${CHAN//%/#}"
+
+echo "JOIN $PROPERCHAN" >> io/cmd.in
+
+rm -f "io/$CHAN.in"
+mkfifo "io/$CHAN.in"
+(cat <> "io/$CHAN.in" & echo $! >&3) 3>>"io/$CHAN.pid" | sed -l "s/^/PRIVMSG $PROPERCHAN : /" >> "io/cmd.in" &
+
+(tail -f io/main.out & echo $! >&3) 3>>"io/$CHAN.pid" | grep --line-buffered "PRIVMSG $PROPERCHAN" | sed -lE 's/:([^!]+)![^:]+:(.+)/<\1> \2/' >> "io/$CHAN.out" &
