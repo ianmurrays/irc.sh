@@ -29,11 +29,16 @@ case "$1" in
 		echo "NICK $NICK" >> "$INFILE"
 		echo "USER $NICK 8 * : $NICK" >> "$INFILE"
 		
+		tail -f "$OUTFILE" | grep --line-buffered '^PING ' | sed 's/^PING/PONG/' &
+		echo $! >> "$IRCDIR/main.pid"
+		
 		;;
 	quit )
 		echo QUIT > "$INFILE"
+		
+		cat "$IRCDIR/main.pid" | xargs kill
 
-		rm -f "$IRCDIR/"*
+		rm -rf "$IRCDIR"
 		
 		;;
 	join )
