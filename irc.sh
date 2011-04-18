@@ -29,8 +29,7 @@ case "$1" in
 		echo "NICK $NICK" >> "$INFILE"
 		echo "USER $NICK 8 * : $NICK" >> "$INFILE"
 		
-		tail -f "$OUTFILE" | grep --line-buffered '^PING ' | sed 's/^PING/PONG/' &
-		echo $! >> "$IRCDIR/main.pid"
+		(tail -f "$OUTFILE" & echo $! >&3) 3>> "$IRCDIR/main.pid" | grep --line-buffered '^PING ' | sed 's/^PING/PONG/' &
 		
 		;;
 	quit )
