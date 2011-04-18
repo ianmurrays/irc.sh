@@ -4,11 +4,18 @@ Requires the `nc` utility, standard on Mac OS X (in fact, the whole thing probab
 
 Usage:
 
-* connect with `./irc.sh connect server port nick`
-* join channel with `./irc.sh join %channelname`
-	* When you join %channel, writing to the file `io/%channel.in` sends to the channel, and `io/%channel.out` will be what's said in the channel (tail -f works nicely for viewing it).
-* leave channel with `./irc.sh part %channelname`
-* quit with `./irc.sh quit`
+	$ cd shirc
+	$ ./irc.sh connect irc.freenode.net 6667 steven
+	logging in...success
+	$ ./irc.sh join %ubuntu
+	$ tail -f var/out/%ubuntu
+	<erUSUL> chogoling: the modification. if it fix your boot problems we can only know when you reboot
+	<perlsyntax> or is there a package i need to install?
+	<chogoling> thanks erUSUL  and ActionParsnip
+	^C
+	$ echo 'hi guys! :)' > var/in/%ubuntu
+	$ ./irc.sh part %ubuntu
+	$ ./irc.sh quit
 
 Notes:
 

@@ -1,41 +1,66 @@
 #!/usr/bin/env bash
 
 function usage () {
-	echo "usage: $0 connect server port nick"
-	echo "       $0 join %channel"
-	echo "       $0 part %channel"
+	echo "usage: $0 connect <server> <port> <nick>"
+	echo "       $0 join    <channel>"
+	echo "       $0 part    <channel>"
 	echo "       $0 quit"
+	echo "       note: for your convenience, any occurrences of '%'"
+	echo "             in channel names will be replaced with '#'"
 	exit 1
 }
 
-IRCDIR="$(dirname $0)/io"
+IRCDIR="$(dirname $0)/var"
 
-INFILE="$IRCDIR/main.in"
-OUTFILE="$IRCDIR/main.out"
+INDIR="$IRCDIR/in"
+OUTDIR="$IRCDIR/out"
+PIDSDIR="$IRCDIR/pids"
+
+function is_irc_alive () {
+	kill -0 $(head -n1 "$PIDSDIR/main") 2> /dev/null
+}
 
 case "$1" in
 	connect )
 		HOST=$2
 		PORT=$3
 		NICK=$4
-
-		mkdir -p "$IRCDIR"
-
-		rm -f "$INFILE"
-		mkfifo "$INFILE"
-
-		nc $HOST $PORT <> "$INFILE" > "$OUTFILE" &
-
-		echo "NICK $NICK" >> "$INFILE"
-		echo "USER $NICK 8 * : $NICK" >> "$INFILE"
 		
-		(tail -f "$OUTFILE" & echo $! >&3) 3>> "$IRCDIR/main.pid" | grep --line-buffered '^PING ' | sed 's/^PING/PONG/' &
+		rm -rf "$IRCDIR"
+
+		mkdir -p "$INDIR"
+		mkdir -p "$OUTDIR"
+		mkdir -p "$PIDSDIR"
+
+		mkfifo "$INDIR/main"
+
+		nc $HOST $PORT <> "$INDIR/main" > "$OUTDIR/main" &
+		echo $! > "$PIDSDIR/main"
+		
+		echo "NICK $NICK" >> "$INDIR/main"
+		echo "USER $NICK 8 * : $NICK" >> "$INDIR/main"
+		
+		echo -n 'logging in...'
+		
+		until grep -qE "001 $NICK :" "$OUTDIR/main" || ! is_irc_alive
+		do
+			echo -n
+		done
+		
+		if is_irc_alive; then
+			echo 'success'
+		else
+			echo 'fail'
+			exit 2
+		fi
+		
+		(tail -f "$OUTDIR/main" & echo $! >&3) 3>> "$PIDSDIR/main" | grep --line-buffered '^PING ' | sed 's/^PING/PONG/' &
 		
 		;;
 	quit )
-		echo QUIT > "$INFILE"
+		echo QUIT > "$INDIR/main"
 		
-		cat "$IRCDIR/main.pid" | xargs kill
+		cat "$PIDSDIR/main" | xargs kill
 
 		rm -rf "$IRCDIR"
 		
@@ -44,23 +69,22 @@ case "$1" in
 		CHAN="$2"
 		PROPERCHAN="${CHAN//%/#}"
 
-		echo "JOIN $PROPERCHAN" >> "$INFILE"
+		echo "JOIN $PROPERCHAN" >> "$INDIR/main"
 
-		rm -f "$IRCDIR/$CHAN.in"
-		mkfifo "$IRCDIR/$CHAN.in"
-		(cat <> "$IRCDIR/$CHAN.in" & echo $! >&3) 3>>"$IRCDIR/$CHAN.pid" | sed -l "s/^/PRIVMSG $PROPERCHAN : /" >> "$INFILE" &
+		mkfifo "$INDIR/$CHAN"
+		(cat <> "$INDIR/$CHAN" & echo $! >&3) 3>>"$PIDSDIR/$CHAN" | sed -l "s/^/PRIVMSG $PROPERCHAN : /" >> "$INDIR/main" &
 
-		(tail -f "$OUTFILE" & echo $! >&3) 3>>"$IRCDIR/$CHAN.pid" | grep --line-buffered "PRIVMSG $PROPERCHAN" | sed -lE 's/:([^!]+)![^:]+:(.+)/<\1> \2/' >> "$IRCDIR/$CHAN.out" &
+		(tail -f "$OUTDIR/main" & echo $! >&3) 3>>"$PIDSDIR/$CHAN" | grep --line-buffered "PRIVMSG $PROPERCHAN" | sed -lE 's/:([^!]+)![^:]+:(.+)/<\1> \2/' >> "$OUTDIR/$CHAN" &
 		
 		;;
 	part )
 		CHAN="$2"
 		PROPERCHAN="${CHAN//%/#}"
 
-		echo "PART $PROPERCHAN" >> "$INFILE"
+		echo "PART $PROPERCHAN" >> "$INDIR/main"
 
-		cat "$IRCDIR/$CHAN.pid" | xargs kill
-		rm "$IRCDIR/$CHAN".*
+		cat "$PIDSDIR/$CHAN" | xargs kill
+		rm "$IRCDIR"/*/"$CHAN"
 		
 		;;
 	* )
