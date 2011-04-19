@@ -4,7 +4,6 @@ Requires the `nc` utility, standard on Mac OS X (in fact, the whole thing probab
 
 Usage:
 
-	$ cd shirc
 	$ ./irc.sh connect irc.freenode.net 6667 steven
 	logging in...success
 	$ ./irc.sh join %ubuntu
