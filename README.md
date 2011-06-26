@@ -1,6 +1,6 @@
 Shell-based IRC client
 
-Requires the `nc` utility, standard on Mac OS X (in fact, the whole thing probably is probably hardcoded to just work on Mac OS X).
+Requires the `nc` utility, standard on Mac OS X (in fact, the whole thing is probably hardcoded to just work on Mac OS X).
 
 Usage:
 
